@@ -1,13 +1,15 @@
 <?php
-    $pagina = "certificado";
-    include "../../templates/header.php"; 
-    include "../../controllers/bd.php"; 
-
     if($_SESSION['privilegios'] == 2){
         header("Location:../../controllers/cerrar.php");
     }
 
-    $errores = [];
+    $pagina = "certificado";
+    include "../../templates/header.php"; 
+    include "../../controllers/bd.php"; 
+    include "../../controllers/classError.php"; 
+
+    $errores = new ClassErrores();
+
     $form = isset($_GET['form']) ? $_GET['form']: '';
     $accion = isset($_GET['accion']) ? $_GET['accion']: '';
     $carpeta = $_GET['carpeta'];
@@ -20,10 +22,10 @@
             $direcionE = "../CertificadosDoc/".$nombreCarpeta."/".$evidencia;
     
             if(!move_uploaded_file($_FILES['evidencias']['tmp_name'], $direcionE)){
-                $errores[] = "No se pudo subir el archivo";
+                $errores->setError("No se pudo subir el archivo");
             }
     
-            if(empty($errores)){
+            if(!$errores->siExiste()){
                 $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nombre_c = :nombre_c  WHERE id = :id");
                 $sentencias->bindParam(":id", $id);
                 $sentencias->bindParam(":nombre_c", $evidencia);
@@ -52,13 +54,13 @@
             if(file_exists($direcionEAn)){
                 unlink($direcionEAn);
             if(!move_uploaded_file($_FILES['evidencias']['tmp_name'], $direcionE)){
-                $errores[] = "No se pudo subir el archivo";
+                $errores->setError("No se pudo subir el archivo");
             }
             }else{
-                $errores[] = "No se pudo borrar el archivo";
+                $errores->setError("No se pudo borrar el archivo");
             }
 
-            if(empty($errores)){
+            if(!$errores->siExiste()){
                 $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nombre_c = :nombre_c  WHERE id = :id");
                 $sentencias->bindParam(":id", $id);
                 $sentencias->bindParam(":nombre_c", $evidencia);
@@ -71,7 +73,7 @@
         }
     }
 
-    if($accion == 3){
+    if($accion == 3){ // Eliminar
         $id = $_GET['id'];
 
         $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
@@ -85,10 +87,10 @@
         if(file_exists($direcionEAn)){
             unlink($direcionEAn);
         }else{
-            $errores[] = "No se pudo borrar el archivo";
+            $errores->setError("No se pudo borrar el archivo");
         }
 
-        if(empty($errores)){
+        if(!$errores->siExiste()){
             $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nombre_c = '' WHERE id = :id");
             $sentencias->bindParam(":id", $id);
             $sentencias->execute();
@@ -143,7 +145,7 @@
     <table class="tabla">
         <thead>
             <tr>
-                <td>Fecha de recolecciónha</td>
+                <td>Fecha de recolección</td>
                 <td>Evidencia</td>
                 <td></td>
             </tr>

@@ -1,6 +1,6 @@
 <?php
     session_start();
-    $url = "http://localhost/appcertificados.forrajeselcorral.com/";
+    $url = "http://localhost/appcertificados.com/";
     if(!isset($_SESSION['user'])){
         header("Location:".$url."index.php");
     }

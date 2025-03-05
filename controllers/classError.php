@@ -9,7 +9,14 @@ class ClassErrores{
 
     public function imprimirErrores() {
         foreach($this->errores as $error){
-            echo $error . "<br>";
+            echo "<div class='errorIn'><p>" . $error . "</p></div><br>";
         }
+    }
+
+    public function siExiste() : bool {
+        if(!empty($this->errores)){
+            return true;
+        }
+        return false;
     }
 }

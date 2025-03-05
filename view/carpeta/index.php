@@ -1,13 +1,16 @@
 <?php
-    $pagina = "carpeta";
-    include "../../templates/header.php"; 
-    include "../../controllers/bd.php";
-
     if($_SESSION['privilegios'] == 2){
         header("Location:../../controllers/cerrar.php");
     }
+    
+    $pagina = "carpeta";
+    
+    include "../../templates/header.php"; 
+    include "../../controllers/bd.php";
+    include "../../controllers/classError.php";
 
-    $errores = [];
+    $errores = new ClassErrores();
+
     $formulario = isset($_GET['form']) ? $_GET['form'] : '';
     $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
     $id = isset($_GET['id']) ? $_GET['id'] : '';
@@ -16,18 +19,18 @@
         if($_SERVER['REQUEST_METHOD'] == 'POST'){
             $carpeta = $_POST['carpeta'];
             if(!$carpeta){
-                $errores = "Añada un nombre a la carpeta";
+                $errores->setError("Añada un nombre a la carpeta");
             }
             $sentencias = $conexion->prepare("SELECT nombre_carpeta FROM tabla_carpetas");
             $sentencias->execute();
             $registroCarpetas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
             foreach($registroCarpetas as $evaluar){
                 if($carpeta == $evaluar['nombre_carpeta']){
-                    $errores = "La carpeta ya existe";
+                    $errores->setError("La carpeta ya existe");
                 }
             }
 
-            if(empty($errores)){
+            if(!$errores->siExiste()){
                 $sentencias = $conexion->prepare("INSERT INTO tabla_carpetas(nombre_carpeta) VALUES (:nombre_carpeta)");
                 $sentencias->bindParam(":nombre_carpeta", $carpeta);
                 $sentencias->execute();
@@ -59,14 +62,14 @@
             $sentencias->execute();
             $resultados = $sentencias->fetchAll(PDO::FETCH_ASSOC);
             if(!$nuevaCarpeta){
-                $errores[] = "Añade un nuevo nombre a la carpeta";
+                $errores->setError("Añade un nuevo nombre a la carpeta");
             }
             foreach($resultados as $resultado){
                 if($nuevaCarpeta == $resultado['nombre_carpeta']){
-                    $errores[] = "La carpeta ya existe";
+                    $errores->setError("La carpeta ya existe");
                 }
             }
-            if(empty($errores)){
+            if(!$errores->siExiste()){
                 $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas WHERE id = :id");
                 $sentencias->bindParam(":id", $id);
                 $sentencias->execute();
@@ -139,19 +142,11 @@
     $Numeropaginas = ceil($totalregistro / $regpagina);
 ?>
 <main class="main_inicio">
-    <?php
-        
-    ?>
 
     <h1>Gestion carpetas</h1>
     <br>
 
-    <?php foreach($errores as $error){ ?>
-        <div class="errorIn">
-            <?php echo $error; ?>
-        </div>
-    <?php } ?>
-
+    <?php if($errores->siExiste()){ $errores->imprimirErrores(); } ?>
 
     <?php 
         if($accion == 1){ 

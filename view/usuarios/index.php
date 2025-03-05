@@ -2,12 +2,14 @@
     $pagina = "usuario";
     include "../../templates/header.php"; 
     include "../../controllers/bd.php"; 
+    include "../../controllers/classError.php"; 
 
     if($_SESSION['privilegios'] == 2){
         header("Location:../../controllers/cerrar.php");
     }
 
-    $errores = [];
+    $errores = new ClassErrores();
+
     $form = isset($_GET['form']) ? $_GET['form']: '';
     $accion = isset($_GET['accion']) ? $_GET['accion']: '';
     $id = isset($_GET['id']) ? $_GET['id']: '';
@@ -24,17 +26,17 @@
             $carpeta = $_POST['carpeta'];
 
             if(!$privilegio){
-                $errores[] = "Añada los privilegios para el usuario";
+                $errores->setError("Añada los privilegios para el usuario");
             }
 
             if($privilegio == 1){ // Creacion de usuario Admin
                 if(!$usuario){
-                    $errores[] = "Añada un nombre para el usuario";
+                    $errores->setError("Añada un nombre para el usuario");
                 }
                 if(!$clave){
-                    $errores[] = "Añada un contraseña para usuario";
+                    $errores->setError("Añada un contraseña para usuario");
                 }
-                if(empty($errores)){
+                if(!$errores->siExiste()){
                     $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio)");
                     $sentencias->bindParam(":usuario", $usuario);
                     $sentencias->bindParam(":clave", $clave);
@@ -50,15 +52,15 @@
                 echo "user";
                 var_dump($_POST);
                 if(!$usuario){
-                    $errores[] = "Añade nombre del usuario";
+                    $errores->setError("Añade nombre del usuario");
                 }
                 if(!$clave){
-                    $errores[] = "Añade una contraseña";
+                    $errores->setError("Añade una contraseña");
                 }
                 if(!$carpeta){
-                    $errores[] = "Añade una carpeta";
+                    $errores->setError("Añade una carpeta");
                 }
-                if(empty($errores)){
+                if(!$errores->siExiste()){
                     $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
                     $sentencias->bindParam(":usuario", $usuario);
                     $sentencias->bindParam(":clave", $clave);
@@ -79,10 +81,9 @@
         if($_SERVER['REQUEST_METHOD'] == 'POST'){
             $nuevaClave = $_POST['nuevaClave'];
             if(!$nuevaClave){
-                $errores[] = "Añada un contraseña para usuario";
+                !$errores->siExiste("Añada un contraseña para usuario");
             }
-            if(empty($errores)){
-                echo "No";
+            if(!$errores->siExiste()){
                 $sentencias = $conexion->prepare("UPDATE tabla_usuarios SET clave = :clave WHERE id = :id");
                 $sentencias->bindParam(":id", $id);
                 $sentencias->bindParam(":clave", $nuevaClave);
@@ -133,11 +134,7 @@
         <a class="botonUsuarios">Nuevo Usuario</a>
     </div>
 
-    <?php foreach($errores as $error){ ?>
-        <div class="errorIn">
-            <?php echo $error; ?>
-        </div>
-    <?php } ?>
+    <?php if($errores->siExiste()){ $errores->imprimirErrores(); } ?>
 
     <table class="tabla">
         <thead>

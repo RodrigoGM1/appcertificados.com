@@ -2,7 +2,8 @@
     include "controllers/bd.php";
     include "controllers/classError.php";
 
-    
+    $errores = new ClassErrores();
+
 
     if($_SERVER['REQUEST_METHOD'] == 'POST'){
         session_start();
@@ -40,7 +41,7 @@
                 header("Location:view/verCertificado.php?carpeta=".$carpeta['id']."&nombreCarpeta=".$carpeta['nombre_carpeta']);
             }
         }else{
-            $error = "El usuario o contraseña son incorrectas";
+            $errores->setError("El usuario o contraseña son incorrectas");
         }
     }
 ?>
@@ -60,9 +61,7 @@
 
 <body class="body_login">
     <main class="main_login">
-            <?php if(!empty($error)){ ?>
-                <div class="errorIn"><p><?php echo $error; ?></p></div><br><br>
-            <?php } ?>
+            <?php if($errores->siExiste()){ $errores->imprimirErrores(); } ?>
 
             <img class="main_login_img" src="img/logo.gif" alt="">
 

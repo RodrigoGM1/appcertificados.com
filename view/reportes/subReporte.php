@@ -2,13 +2,15 @@
     $pagina = "reporte";
     include "../../templates/header.php";
     include "../../controllers/bd.php";
+    include "../../controllers/classError.php";
+
+    $errores = new ClassErrores();
 
     $carpeta = $_GET['carpeta'];    
     $nombreCarpeta = $_GET['nombreCarpeta'];
     $form = isset($_GET['form']) ? $_GET['form']: '';
     $accion = isset($_GET['accion']) ? $_GET['accion']: '';
     $id = isset($_GET['id']) ? $_GET['id']: '';
-    $errores = [];
 
     if($form == 1){ // Crear reporte
         $fecha = '';
@@ -21,19 +23,19 @@
             $direcionE = "../ReportesDoc/".$nombreCarpeta."/".$reporte;
             
             if(!$fecha){
-                $errores[] = "Añada la fecha";
+                $errores->setError("Añada la fecha");
             }
             if(!$cantidad){
-                $errores[] = "Añada la cantidad CO2";
+                $errores->setError("Añada la cantidad CO2");
             }
             if(!$reporte){
-                $errores[] = "Añada el reporte mensual";
+                $errores->setError("Añada el reporte mensual");
             }
             if(!move_uploaded_file($_FILES['reporte']['tmp_name'], $direcionE)){
-                $errores[] = "No se pudo subir el archivo";
+                $errores->setError("No se pudo subir el archivo");
             }
 
-            if(empty($errores)){
+            if(!$errores->siExiste()){
                 $sentencias = $conexion->prepare("INSERT INTO tabla_reportes(fecha, reporte, cantidad, id_carpeta) VALUES (:fecha, :reporte, :cantidad, :id_carpeta)");
                 $sentencias->bindParam(":fecha", $fecha);
                 $sentencias->bindParam(":reporte", $reporte);
@@ -78,13 +80,13 @@
                 if(file_exists($direcionEAn)){
                     unlink($direcionEAn);
                     if(!move_uploaded_file($_FILES['reporteNuevo']['tmp_name'], $direcionE)){
-                        $errores[] = "No se pudo subir el archivo";
+                        $errores->setError("No se pudo subir el archivo");
                     }
                 }else{
-                    $errores[] = "No se pudo borrar el archivo";
+                    $errores->setError("No se pudo borrar el archivo");
                 }
 
-                if(empty($errores)){
+                if(!$errores->siExiste()){
 
                     $sentencias = $conexion->prepare("UPDATE tabla_reportes SET fecha = :fecha, reporte = :reporte, cantidad = :cantidad WHERE id = :id");
                     $sentencias->bindParam(":fecha", $fechaNuevo);
@@ -111,10 +113,10 @@
         if(file_exists($direcionEAn)){
             unlink($direcionEAn);
         }else{
-            $errores[] = "No se pudo borrar el archivo";
+            $errores->setError("No se pudo borrar el archivo");
         }
 
-        if(empty($errores)){
+        if(!$errores->siExiste()){
             $sentencias = $conexion->prepare("DELETE FROM tabla_reportes WHERE id = :id");
             $sentencias->bindParam(":id", $id);
             $sentencias->execute();
@@ -139,11 +141,7 @@
     <h1>Reportes <?php echo $nombreCarpeta; ?></h1>
     <br>
 
-    <?php foreach($errores as $error){ ?>
-        <div class="errorIn">
-            <?php echo $error; ?>
-        </div>
-    <?php } ?>
+    <?php if($errores->siExiste()){ $errores->imprimirErrores(); } ?>
 
     <?php if($accion == 1){
         $sentencias = $conexion->prepare("SELECT * FROM tabla_reportes WHERE id = :id");
