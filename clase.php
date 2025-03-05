@@ -1,5 +1,5 @@
 <?php
-
+/*
 class ClaseSencilla{
     public $var = "Hola mundo\n";
 
@@ -122,15 +122,24 @@ $test->prop = "foobar";
 
 var_dump($test->prop);
 
-/*
-class Test {
-    public function __construct(public readonly object $obj) {}
+
+
+class MyClase{
+    const CONSTANTE = "valor constante";
+
+    function mostrarConstante(){
+        echo self::CONSTANTE . "\n";
+    }
 }
 
-$test = new Test(new stdClass);
-// Mutación interior.
-$test->obj->foo = 1;
-// Reasignación ilegal.
-$test->obj = new stdClass;
-*/
+echo MyClase::CONSTANTE . "\n";
 
+$nombreClase = "MyClase";
+
+echo $nombreClase::CONSTANTE . "\n";
+
+$clase = new MyClase();
+
+echo $clase::CONSTANTE;
+
+*/
