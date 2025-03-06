@@ -1,15 +1,14 @@
 <?php
-    $pagina = "reporte";
-    include "../../templates/header.php"; 
-    include "../../controllers/bd.php";
-
     if($_SESSION['privilegios'] == 2){
         header("Location:../../controllers/cerrar.php");
     }
 
-    $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas");
-    $sentencias->execute();
-    $carpetas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+    $pagina = "reporte";
+    include "../../templates/header.php"; 
+    include "../../controllers/classConexion.php";
+
+    $conexion = new ConexionBD();
+    $carpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
 ?>
 <main class="main_inicio">
     <h1>Reportes mensuales</h1>

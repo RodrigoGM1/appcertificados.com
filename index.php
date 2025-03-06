@@ -1,8 +1,9 @@
 <?php
-    include "controllers/bd.php";
     include "controllers/classError.php";
+    include "controllers/classConexion.php";
 
     $errores = new ClassErrores();
+    $conexion = new ConexionBD();
 
 
     if($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -10,11 +11,7 @@
         $usuario = $_POST['usuario'];
         $clave = $_POST['clave'];
 
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE usuario = :usuario AND clave = :clave");
-        $sentencias->bindParam(":usuario", $usuario);
-        $sentencias->bindParam(":clave", $clave);
-        $sentencias->execute();
-        $registro = $sentencias->fetch(PDO::FETCH_LAZY);
+        $registro = $conexion->selecionarRegistro("tabla_usuarios", "usuario = '$usuario' AND clave = '$clave'");
 
         if(is_object($registro)){
             if($registro['idprivilegio'] == 1){
@@ -23,27 +20,25 @@
                 $_SESSION['privilegios'] = $registro['idprivilegio'];
                 header('Location:view/inicio.php');
 
-            }else if($registro['idprivilegio'] == 2){
+            }
+            else if($registro['idprivilegio'] == 2){
                 $_SESSION['user'] = $registro['usuario'];
+                $user =  $_SESSION['user'];
                 $_SESSION['logueado'] = true;
                 $_SESSION['privilegios'] = $registro['idprivilegio'];
 
-                $sentencias = $conexion->prepare("SELECT * FROM tabla_usuario_carpeta WHERE usuario_a_carpeta = :usuario_a_carpeta");
-                $sentencias->bindParam(":usuario_a_carpeta", $_SESSION['user']);
-                $sentencias->execute();
-                $resultado = $sentencias->fetch(PDO::FETCH_LAZY);
-                $idcarpeta = $resultado['idcarpeta'];
-                $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas WHERE id = :id");
-                $sentencias->bindParam(":id", $idcarpeta);
-                $sentencias->execute();
-                $carpeta = $sentencias->fetch(PDO::FETCH_LAZY);
-    
+                $registro = $conexion->selecionarRegistro("tabla_usuario_carpeta", "usuario_a_carpeta =  '$user'");
+                $idcarpeta = $registro['idcarpeta'];
+                $carpeta = $conexion->selecionarRegistro("tabla_carpetas", "id = '$idcarpeta'");
                 header("Location:view/verCertificado.php?carpeta=".$carpeta['id']."&nombreCarpeta=".$carpeta['nombre_carpeta']);
+                var_dump($carpeta);
             }
-        }else{
+        }
+        else {
             $errores->setError("El usuario o contraseña son incorrectas");
         }
     }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -10,10 +10,8 @@
          echo $ex->getMessage();
     }
 
-    var_dump($conexion);
+    // $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios");
+    // $sentencias->execute();
+    // $registro = $sentencias->fetch(PDO::FETCH_LAZY);
 
-    $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios");
-    $sentencias->execute();
-    $registro = $sentencias->fetch(PDO::FETCH_LAZY);
-
-    var_dump($registro);
+    // var_dump($registro);

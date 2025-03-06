@@ -8,8 +8,13 @@
     include "../../templates/header.php"; 
     include "../../controllers/bd.php";
     include "../../controllers/classError.php";
+    include "../../controllers/classConexion.php";
 
     $errores = new ClassErrores();
+    $conexion = new ConexionBD();
+
+
+/*
 
     $formulario = isset($_GET['form']) ? $_GET['form'] : '';
     $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
@@ -140,9 +145,90 @@
     $totalregistro = $conexion->query("SELECT FOUND_ROWS() AS total");
     $totalregistro = $totalregistro->fetch()['total'];
     $Numeropaginas = ceil($totalregistro / $regpagina);
+*/
 ?>
 <main class="main_inicio">
+    <?php
+        $formulario = isset($_GET['form']) ? $_GET['form'] : '';
+        $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
+        $id = isset($_GET['id']) ? $_GET['id'] : '';
 
+        if($formulario == 1){ // Registro de una nueva carpeta
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $carpeta = $_POST['carpeta'];
+                if(!$carpeta){
+                    $errores->setError("Añada un nombre a la carpeta");
+                }
+
+                $registroCarpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
+                foreach($registroCarpetas as $evaluar){
+                    if($carpeta == $evaluar['nombre_carpeta']){
+                        $errores->setError("La carpeta ya existe");
+                    }
+                }
+
+                if(!$errores->siExiste()){
+                    $valores = $_POST;
+
+                    $conexion->inseratRegistro($valores);
+
+                    exit;
+                    $sentencias = $conexion->prepare("INSERT INTO tabla_carpetas(nombre_carpeta) VALUES (:nombre_carpeta)");
+                    $sentencias->bindParam(":nombre_carpeta", $carpeta);
+                    $sentencias->execute();
+                    if($sentencias){
+                        $direcionC = "../CertificadosDoc/".$carpeta;
+                        $direcionE = "../EvidenciasDoc/".$carpeta;
+                        $direcionR = "../ReportesDoc/".$carpeta;
+    
+                        $direcionM = "../EvidenciasSub/Manifiestos/".$carpeta;
+                        $direcionN = "../EvidenciasSub/Notas/".$carpeta;
+                        mkdir($direcionC, 0777, true);
+                        mkdir($direcionE, 0777, true);
+                        mkdir($direcionR, 0777, true);
+    
+                        mkdir($direcionM, 0777, true);
+                        mkdir($direcionN, 0777, true);
+    
+                        header("Location: index.php");
+                    }
+                }
+
+
+                
+
+    
+                if(!$errores->siExiste()){
+                    $sentencias = $conexion->prepare("INSERT INTO tabla_carpetas(nombre_carpeta) VALUES (:nombre_carpeta)");
+                    $sentencias->bindParam(":nombre_carpeta", $carpeta);
+                    $sentencias->execute();
+                    if($sentencias){
+                        $direcionC = "../CertificadosDoc/".$carpeta;
+                        $direcionE = "../EvidenciasDoc/".$carpeta;
+                        $direcionR = "../ReportesDoc/".$carpeta;
+    
+                        $direcionM = "../EvidenciasSub/Manifiestos/".$carpeta;
+                        $direcionN = "../EvidenciasSub/Notas/".$carpeta;
+                        mkdir($direcionC, 0777, true);
+                        mkdir($direcionE, 0777, true);
+                        mkdir($direcionR, 0777, true);
+    
+                        mkdir($direcionM, 0777, true);
+                        mkdir($direcionN, 0777, true);
+    
+                        header("Location: index.php");
+                    }
+                }
+            }
+        }
+
+        $consultaCarpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
+
+        $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+        $regpagina = 10;
+        $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
+        $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
+    ?>
     <h1>Gestion carpetas</h1>
     <br>
 
@@ -173,6 +259,7 @@
             <tr class="formTabla">    
                 <form action="?form=1" method="POST">
                     <td><input type="text" name="carpeta"></td>
+                    <td><input type="text" name="prueba"></td>
                     <td class="relleno"><button class="botonCarpetasG">Guardar</button></td>
                 </form>
             </tr>
