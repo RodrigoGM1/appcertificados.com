@@ -36,29 +36,36 @@ class ConexionBD{
         return $registro;
     }
 
-    public function inseratRegistro($valores){
-
-
+    public function inseratRegistro(string $tabla, array $array){
         $conexion = self::conexion();
-        $registros = [];
-        $values = [];
-        foreach($valores as $key => $valor){
-            $registros[] = $key;
-            $values[] = $valor;
+
+        $sentencias = $conexion->prepare("INSERT INTO ".$tabla."(".join(", ", self::conversionKey($array)).") VALUES ('". join("', '", self::conversionValues($array)) ."')");
+        $sentencias->execute();
+    }
+
+    public function actualizarRegistro(string $tabla, array $array, $id){
+        $conexion = self::conexion();
+
+        $valores = [];
+        foreach($array as $key => $valor){
+            $valores[] = $key." = '".$valor."'";
         }
 
-        foreach($registros as $registro){
-            $string .= $registro. " ";
+        $sentencias = $conexion->prepare("UPDATE ".$tabla." SET ".join(", ", $valores)." WHERE id = ".$id."");
+        $sentencias->execute();
+    }
+
+
+    public function borrarRegistro(string $tabla, string $values, string $id){
+        $conexion = self::conexion();
+
+        if($values == ""){
+            $sentencias = $conexion->prepare("DELETE FROM ".$tabla." WHERE id = ". $id ."");
+            $sentencias->execute();
         }
-
-        foreach($values as $value){
-            $stringvalue .= "'".$value."'". " ";
+        else{
+            echo "Borrar los atribitos de registro";
         }
-
-
-        var_dump($string);
-        echo "<br>";
-        var_dump($stringvalue);
     }
 
     public function paginador(int $pagina, int $regpagina, int $inicio) : float{
@@ -74,9 +81,26 @@ class ConexionBD{
         return $Numeropaginas;
     }
 
-
-    private function convercionString($valor){
-
+    private function conversionKey(array $array) {
+        $keys = [];
+        foreach($array as $key => $valor){
+            $keys[] = $key;
+        }
+        return $keys;
     }
+
+    private function conversionValues(array $array) {
+        $keys = [];
+        foreach($array as $key => $valor){
+            $keys[] = $valor;
+        }
+
+        return $keys;
+    }
+
+
+
+    
+
 }
 
