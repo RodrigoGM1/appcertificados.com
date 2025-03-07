@@ -1,133 +1,216 @@
 <?php
     $pagina = "usuario";
     include "../../templates/header.php"; 
-    include "../../controllers/bd.php"; 
     include "../../controllers/classError.php"; 
+    include "../../controllers/classConexion.php"; 
 
     if($_SESSION['privilegios'] == 2){
         header("Location:../../controllers/cerrar.php");
     }
 
     $errores = new ClassErrores();
+    $conexion = new ConexionBD();
 
-    $form = isset($_GET['form']) ? $_GET['form']: '';
-    $accion = isset($_GET['accion']) ? $_GET['accion']: '';
-    $id = isset($_GET['id']) ? $_GET['id']: '';
+    
+?>
+<main class="main_inicio">
 
-    $usuario = '';
-    $clave = '';
-    $privilegio = '';
-    $carpeta = '';
-    if($form == 1){ // Creacion de usuario
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $usuario = $_POST['usuario'];
-            $clave = $_POST['clave'];
-            $privilegio = $_POST['privilegio'];
-            $carpeta = $_POST['carpeta'];
+    <?php
+        $form = isset($_GET['form']) ? $_GET['form']: '';
+        $accion = isset($_GET['accion']) ? $_GET['accion']: '';
+        $id = isset($_GET['id']) ? $_GET['id']: '';
 
-            if(!$privilegio){
-                $errores->setError("Añada los privilegios para el usuario");
-            }
+        $usuarios = $conexion->selecionarRegistro("tabla_usuarios", "");
+        $tabPrivilegios = $conexion->selecionarRegistro("tabla_privilegios", "");
+        $carpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
+        
 
-            if($privilegio == 1){ // Creacion de usuario Admin
-                if(!$usuario){
-                    $errores->setError("Añada un nombre para el usuario");
+
+        $usuario = '';
+        $clave = '';
+        $privilegio = '';
+        $carpeta = '';
+        if($form == 1){ // Creacion de usuario
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $usuario = $_POST['usuario'];
+                $clave = $_POST['clave'];
+                $privilegio = $_POST['idprivilegio'];
+                $carpeta = $_POST['carpeta'];
+    
+                if(!$privilegio){
+                    $errores->setError("Añada los privilegios para el usuario");
                 }
-                if(!$clave){
-                    $errores->setError("Añada un contraseña para usuario");
-                }
-                if(!$errores->siExiste()){
-                    $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio)");
-                    $sentencias->bindParam(":usuario", $usuario);
-                    $sentencias->bindParam(":clave", $clave);
-                    $sentencias->bindParam(":idprivilegio", $privilegio);
-                    $sentencias->execute();
-                    if($sentencias){
+    
+                if($privilegio == 1){ // Creacion de usuario Admin
+                    if(!$usuario){
+                        $errores->setError("Añada un nombre para el usuario");
+                    }
+                    if(!$clave){
+                        $errores->setError("Añada un contraseña para usuario");
+                    }
+                    if(!$errores->siExiste()){
+                        $valores = $_POST;
+
+                        $conexion->inseratRegistro("tabla_usuarios", $valores);
                         header("Location: index.php");
-                    }   
-                }
-            }
+                        exit;
 
-            if($privilegio == 2){ // Creacion de usuario Normal
-                echo "user";
-                var_dump($_POST);
-                if(!$usuario){
-                    $errores->setError("Añade nombre del usuario");
+                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio)");
+                        $sentencias->bindParam(":usuario", $usuario);
+                        $sentencias->bindParam(":clave", $clave);
+                        $sentencias->bindParam(":idprivilegio", $privilegio);
+                        $sentencias->execute();
+                        if($sentencias){
+                            header("Location: index.php");
+                        }   
+                    }
                 }
-                if(!$clave){
-                    $errores->setError("Añade una contraseña");
+    
+                if($privilegio == 2){ // Creacion de usuario Normal
+                    echo "user";
+                    var_dump($_POST);
+                    if(!$usuario){
+                        $errores->setError("Añade nombre del usuario");
+                    }
+                    if(!$clave){
+                        $errores->setError("Añade una contraseña");
+                    }
+                    if(!$carpeta){
+                        $errores->setError("Añade una carpeta");
+                    }
+                    if(!$errores->siExiste()){
+                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
+                        $sentencias->bindParam(":usuario", $usuario);
+                        $sentencias->bindParam(":clave", $clave);
+                        $sentencias->bindParam(":idprivilegio", $privilegio);
+                        $sentencias->bindParam(":usuario_a_carpeta", $usuario);
+                        $sentencias->bindParam(":idcarpeta", $carpeta);
+                        $sentencias->execute();
+                        if($sentencias){
+                            header("Location: index.php");
+                        }
+                    }
                 }
-                if(!$carpeta){
-                    $errores->setError("Añade una carpeta");
+    
+            }
+        }
+
+        /*
+        $usuario = '';
+        $clave = '';
+        $privilegio = '';
+        $carpeta = '';
+        if($form == 1){ // Creacion de usuario
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $usuario = $_POST['usuario'];
+                $clave = $_POST['clave'];
+                $privilegio = $_POST['privilegio'];
+                $carpeta = $_POST['carpeta'];
+    
+                if(!$privilegio){
+                    $errores->setError("Añada los privilegios para el usuario");
+                }
+    
+                if($privilegio == 1){ // Creacion de usuario Admin
+                    if(!$usuario){
+                        $errores->setError("Añada un nombre para el usuario");
+                    }
+                    if(!$clave){
+                        $errores->setError("Añada un contraseña para usuario");
+                    }
+                    if(!$errores->siExiste()){
+                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio)");
+                        $sentencias->bindParam(":usuario", $usuario);
+                        $sentencias->bindParam(":clave", $clave);
+                        $sentencias->bindParam(":idprivilegio", $privilegio);
+                        $sentencias->execute();
+                        if($sentencias){
+                            header("Location: index.php");
+                        }   
+                    }
+                }
+    
+                if($privilegio == 2){ // Creacion de usuario Normal
+                    echo "user";
+                    var_dump($_POST);
+                    if(!$usuario){
+                        $errores->setError("Añade nombre del usuario");
+                    }
+                    if(!$clave){
+                        $errores->setError("Añade una contraseña");
+                    }
+                    if(!$carpeta){
+                        $errores->setError("Añade una carpeta");
+                    }
+                    if(!$errores->siExiste()){
+                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
+                        $sentencias->bindParam(":usuario", $usuario);
+                        $sentencias->bindParam(":clave", $clave);
+                        $sentencias->bindParam(":idprivilegio", $privilegio);
+                        $sentencias->bindParam(":usuario_a_carpeta", $usuario);
+                        $sentencias->bindParam(":idcarpeta", $carpeta);
+                        $sentencias->execute();
+                        if($sentencias){
+                            header("Location: index.php");
+                        }
+                    }
+                }
+    
+            }
+        }
+    
+        if($form == 2){ // Actualizar usuario
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $nuevaClave = $_POST['nuevaClave'];
+                if(!$nuevaClave){
+                    !$errores->siExiste("Añada un contraseña para usuario");
                 }
                 if(!$errores->siExiste()){
-                    $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
-                    $sentencias->bindParam(":usuario", $usuario);
-                    $sentencias->bindParam(":clave", $clave);
-                    $sentencias->bindParam(":idprivilegio", $privilegio);
-                    $sentencias->bindParam(":usuario_a_carpeta", $usuario);
-                    $sentencias->bindParam(":idcarpeta", $carpeta);
+                    $sentencias = $conexion->prepare("UPDATE tabla_usuarios SET clave = :clave WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":clave", $nuevaClave);
                     $sentencias->execute();
                     if($sentencias){
                         header("Location: index.php");
                     }
                 }
             }
-
         }
-    }
-
-    if($form == 2){ // Actualizar usuario
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $nuevaClave = $_POST['nuevaClave'];
-            if(!$nuevaClave){
-                !$errores->siExiste("Añada un contraseña para usuario");
-            }
-            if(!$errores->siExiste()){
-                $sentencias = $conexion->prepare("UPDATE tabla_usuarios SET clave = :clave WHERE id = :id");
-                $sentencias->bindParam(":id", $id);
-                $sentencias->bindParam(":clave", $nuevaClave);
-                $sentencias->execute();
-                if($sentencias){
-                    header("Location: index.php");
-                }
-            }
-        }
-    }
-
-    if($accion == 2){ // Eliminacion usuario
-        $id = $_GET['id'];
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE id = :id");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->execute();
-        $resultado = $sentencias->fetch(PDO::FETCH_LAZY);
-        $resultado = $resultado['usuario'];
-        $sentencias = $conexion->prepare("DELETE FROM tabla_usuarios WHERE id = :id; DELETE FROM tabla_usuario_carpeta WHERE usuario_a_carpeta = :usuario_a_carpeta");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->bindParam(":usuario_a_carpeta", $resultado);
-        $sentencias->execute();
-        if($sentencias){
-            header("Location: index.php");
-        }
-    }
-
-    $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios");
-    $sentencias->execute();
-    $usuarios = $sentencias->fetchAll(PDO::FETCH_ASSOC);
     
-    $sentencias = $conexion->prepare("SELECT * FROM tabla_privilegios");
-    $sentencias->execute();
-    $tabPrivilegios = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+        if($accion == 2){ // Eliminacion usuario
+            $id = $_GET['id'];
+            $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE id = :id");
+            $sentencias->bindParam(":id", $id);
+            $sentencias->execute();
+            $resultado = $sentencias->fetch(PDO::FETCH_LAZY);
+            $resultado = $resultado['usuario'];
+            $sentencias = $conexion->prepare("DELETE FROM tabla_usuarios WHERE id = :id; DELETE FROM tabla_usuario_carpeta WHERE usuario_a_carpeta = :usuario_a_carpeta");
+            $sentencias->bindParam(":id", $id);
+            $sentencias->bindParam(":usuario_a_carpeta", $resultado);
+            $sentencias->execute();
+            if($sentencias){
+                header("Location: index.php");
+            }
+        }
+    
+        $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios");
+        $sentencias->execute();
+        $usuarios = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+        
+        $sentencias = $conexion->prepare("SELECT * FROM tabla_privilegios");
+        $sentencias->execute();
+        $tabPrivilegios = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+    
+        $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE idprivilegio = 1");
+        $sentencias->execute();
+        $administradores = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+    
+        $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas");
+        $sentencias->execute();
+        $carpetas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+        */
+    ?>
 
-    $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE idprivilegio = 1");
-    $sentencias->execute();
-    $administradores = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-
-    $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas");
-    $sentencias->execute();
-    $carpetas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-?>
-<main class="main_inicio">
     <h1>Usuarios</h1>
     <div class="contemedotrUsuario">
         <h3>Administradores</h3>
@@ -145,16 +228,16 @@
             </tr>
         </thead>
         <tbody>
-            <?php $i=0; foreach($administradores as $administrador){  ?>
+            <?php $i=0; foreach($usuarios as $impUsuarios){ if($impUsuarios['idprivilegio'] == 1){ ?>
             <tr class="<?php if(($i % 2) == 0){ echo "verdeObscuro"; }else{ echo "verdeClaro"; } ?> verdeObscuro">
-                <td><?php echo $administrador['usuario']; ?></td>
+                <td><?php echo $impUsuarios['usuario']; ?></td>
                 <td>Administrador</td>
                 <td>
                     <a href="?accion=1&id=<?php echo $administrador['id']; ?>"><i class="fa-regular fa-pen-to-square estiloOjo"></i></a>
                     <a href="?accion=2&id=<?php echo $administrador['id']; ?>"><i class="fa-regular fa-trash-can estiloBasura"></i></a>
                 </td>
             </tr>
-            <?php $i++; }  ?>
+            <?php $i++; } } ?>
         </tbody>
     </table>
 
@@ -192,7 +275,7 @@
                 <input class="inputUsuario" type="password" placeholder="Contraseña" name="clave">
                 <div class="contSelectUsuario">
                     <label>Privilegios</label>
-                    <select class="inputUsuario" name="privilegio">
+                    <select class="inputUsuario" name="idprivilegio">
                         <option value="">-- Privilegios --</option>
                         <?php foreach($tabPrivilegios as $tabPrivilegio){ ?>
                         <option value="<?php echo $tabPrivilegio['id']; ?>"><?php echo $tabPrivilegio['nombreprivilegio']; ?></option>

@@ -36,6 +36,9 @@ class ConexionBD{
         $conexion = self::conexion();
 
         $sentencias = $conexion->prepare("INSERT INTO ".$tabla."(".join(", ", self::conversionKey($array)).") VALUES ('". join("', '", self::conversionValues($array)) ."')");
+        var_dump($sentencias);
+        // echo "<br>";
+        // var_dump($array);
         $sentencias->execute();
     }
 
@@ -80,6 +83,9 @@ class ConexionBD{
     private function conversionKey(array $array) {
         $keys = [];
         foreach($array as $key => $valor){
+            if($valor == ""){
+                continue;
+            }
             $keys[] = $key;
         }
         return $keys;
@@ -88,6 +94,9 @@ class ConexionBD{
     private function conversionValues(array $array) {
         $keys = [];
         foreach($array as $key => $valor){
+            if($valor == ""){
+                continue;
+            }
             $keys[] = $valor;
         }
 
