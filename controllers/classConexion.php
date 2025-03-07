@@ -1,14 +1,10 @@
 <?php
 
 class ConexionBD{
-    public $atributos = [];
-
     protected static $servidor = 'localhost';
     protected static $baseDatos = 'forraje1_base_elcorral';
     protected static $usuario = 'root';
     protected static $clave = 'root';
-
-    protected static $nombreCarpeta;
 
     private function conexion() : PDO{
         try{
@@ -36,7 +32,7 @@ class ConexionBD{
         return $registro;
     }
 
-    public function inseratRegistro(string $tabla, array $array){
+    public function inseratRegistro(string $tabla, array $array) {
         $conexion = self::conexion();
 
         $sentencias = $conexion->prepare("INSERT INTO ".$tabla."(".join(", ", self::conversionKey($array)).") VALUES ('". join("', '", self::conversionValues($array)) ."')");

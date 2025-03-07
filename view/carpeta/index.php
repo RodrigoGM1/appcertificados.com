@@ -9,12 +9,11 @@
     include "../../controllers/bd.php";
     include "../../controllers/classError.php";
     include "../../controllers/classConexion.php";
+    include "../../controllers/classCarpeta.php";
 
     $errores = new ClassErrores();
     $conexion = new ConexionBD();
-
-
-/*
+    $carpetaObj = new Carpeta();
 
     $formulario = isset($_GET['form']) ? $_GET['form'] : '';
     $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
@@ -22,13 +21,12 @@
 
     if($formulario == 1){ // Registro de una nueva carpeta
         if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $carpeta = $_POST['carpeta'];
+            $carpeta = $_POST['nombre_carpeta'];
             if(!$carpeta){
                 $errores->setError("Añada un nombre a la carpeta");
             }
-            $sentencias = $conexion->prepare("SELECT nombre_carpeta FROM tabla_carpetas");
-            $sentencias->execute();
-            $registroCarpetas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+
+            $registroCarpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
             foreach($registroCarpetas as $evaluar){
                 if($carpeta == $evaluar['nombre_carpeta']){
                     $errores->setError("La carpeta ya existe");
@@ -36,253 +34,61 @@
             }
 
             if(!$errores->siExiste()){
-                $sentencias = $conexion->prepare("INSERT INTO tabla_carpetas(nombre_carpeta) VALUES (:nombre_carpeta)");
-                $sentencias->bindParam(":nombre_carpeta", $carpeta);
-                $sentencias->execute();
-                if($sentencias){
-                    $direcionC = "../CertificadosDoc/".$carpeta;
-                    $direcionE = "../EvidenciasDoc/".$carpeta;
-                    $direcionR = "../ReportesDoc/".$carpeta;
-
-                    $direcionM = "../EvidenciasSub/Manifiestos/".$carpeta;
-                    $direcionN = "../EvidenciasSub/Notas/".$carpeta;
-                    mkdir($direcionC, 0777, true);
-                    mkdir($direcionE, 0777, true);
-                    mkdir($direcionR, 0777, true);
-
-                    mkdir($direcionM, 0777, true);
-                    mkdir($direcionN, 0777, true);
-
-                    header("Location: index.php");
-                }
+                $valores = $_POST;
+                $conexion->inseratRegistro("tabla_carpetas", $valores);
+                $carpetaObj->crear($carpeta);
+                header("Location: index.php");
             }
         }
     }
 
     if($formulario == 2){ // Actualizar la carpeta
-        $nuevaCarpeta = '';
         if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $nuevaCarpeta = $_POST['nuevaCarpeta'];
-            $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas");
-            $sentencias->execute();
-            $resultados = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-            if(!$nuevaCarpeta){
+            if(!$_POST['nombre_carpeta']){
                 $errores->setError("Añade un nuevo nombre a la carpeta");
             }
+
+            $resultados = $conexion->selecionarRegistro("tabla_carpetas", "");
+
             foreach($resultados as $resultado){
-                if($nuevaCarpeta == $resultado['nombre_carpeta']){
+                if($_POST['nombre_carpeta'] == $resultado['nombre_carpeta']){
                     $errores->setError("La carpeta ya existe");
                 }
             }
+
             if(!$errores->siExiste()){
-                $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas WHERE id = :id");
-                $sentencias->bindParam(":id", $id);
-                $sentencias->execute();
-                $rec = $sentencias->fetch(PDO::FETCH_LAZY);
+                $valores = $_POST;
+                $nuevaCarpeta = $_POST['nombre_carpeta'];
+                $rec = $conexion->selecionarRegistro("tabla_carpetas", "id = ". $id);
                 $viejaCarpeta = $rec['nombre_carpeta'];
-                $direcionCAnt = "../CertificadosDoc/".$viejaCarpeta;
-                $direcionEAnt = "../EvidenciasDoc/".$viejaCarpeta;
-                $direcionRAnt = "../ReportesDoc/".$viejaCarpeta;
-                $direcionMAnt = "../EvidenciasSub/Manifiestos/".$viejaCarpeta;
-                $direcionNAnt = "../EvidenciasSub/Notas/".$viejaCarpeta;
-                $direcionC = "../CertificadosDoc/".$nuevaCarpeta;
-                $direcionE = "../EvidenciasDoc/".$nuevaCarpeta;
-                $direcionR = "../ReportesDoc/".$nuevaCarpeta;
-                $direcionM = "../EvidenciasSub/Manifiestos/".$nuevaCarpeta;
-                $direcionN = "../EvidenciasSub/Notas/".$nuevaCarpeta;
-                rename($direcionCAnt, $direcionC);
-                rename($direcionEAnt, $direcionE);
-                rename($direcionRAnt, $direcionR);
-                rename($direcionMAnt, $direcionM);
-                rename($direcionNAnt, $direcionN);
-                $sentencias = $conexion->prepare("UPDATE tabla_carpetas SET nombre_carpeta = :nombre_carpeta  WHERE id = :id");
-                $sentencias->bindParam(":id", $id);
-                $sentencias->bindParam(":nombre_carpeta", $nuevaCarpeta);
-                $sentencias->execute();
-                if($sentencias){ 
-                    header("Location: index.php");
-                }
+
+                $carpetaObj->modificar($nuevaCarpeta, $viejaCarpeta);
+                $conexion->actualizarRegistro("tabla_carpetas", $valores, $id);
+
+                header("Location: index.php");
             }
         }
     }
 
-    if($accion == 2){ // Eliminacion de la carpeta
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas WHERE id = :id");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->execute();
-        $borrar = $sentencias->fetch(PDO::FETCH_LAZY);
+    if($accion == 2){ // Eliminacion de la carpeta            
+        $borrar = $conexion->selecionarRegistro("tabla_carpetas", "id = ". $id);
         $borrar = $borrar['nombre_carpeta'];
-        $direcionC = "../CertificadosDoc/".$borrar;
-        $direcionE = "../EvidenciasDoc/".$borrar;
-        $direcionR = "../ReportesDoc/".$borrar;
-        $direcionM = "../EvidenciasSub/Manifiestos/".$borrar;
-        $direcionN = "../EvidenciasSub/Notas/".$borrar;
-        rmdir($direcionC);
-        rmdir($direcionE);
-        rmdir($direcionR);
-        rmdir($direcionM);
-        rmdir($direcionN);
-        if($sentencias){
-            $sentencias = $conexion->prepare("DELETE FROM tabla_carpetas WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            header("Location: index.php");
-        }
+        $carpetaObj->eliminar($borrar);
+
+        $conexion->borrarRegistro("tabla_carpetas", "", $id);
+
+        header("Location: index.php");
     }
 
-*/
+    $consultaCarpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
+    $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+    $regpagina = 10;
+    $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
+    $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
 ?>
 <main class="main_inicio">
     <?php
-        $formulario = isset($_GET['form']) ? $_GET['form'] : '';
-        $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
-        $id = isset($_GET['id']) ? $_GET['id'] : '';
-
-        if($formulario == 1){ // Registro de una nueva carpeta
-            if($_SERVER['REQUEST_METHOD'] == 'POST'){
-                $carpeta = $_POST['nombre_carpeta'];
-                if(!$carpeta){
-                    $errores->setError("Añada un nombre a la carpeta");
-                }
-
-                $registroCarpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
-                foreach($registroCarpetas as $evaluar){
-                    if($carpeta == $evaluar['nombre_carpeta']){
-                        $errores->setError("La carpeta ya existe");
-                    }
-                }
-
-                if(!$errores->siExiste()){
-                    $valores = $_POST;
-                    $conexion->inseratRegistro("tabla_carpetas", $valores);
-
-                    header("Location: index.php");
-                
-                    /* Falta crear la clase para crear la carpeta */
-                    // if($sentencias){
-                    //     $direcionC = "../CertificadosDoc/".$carpeta;
-                    //     $direcionE = "../EvidenciasDoc/".$carpeta;
-                    //     $direcionR = "../ReportesDoc/".$carpeta;
-    
-                    //     $direcionM = "../EvidenciasSub/Manifiestos/".$carpeta;
-                    //     $direcionN = "../EvidenciasSub/Notas/".$carpeta;
-                    //     mkdir($direcionC, 0777, true);
-                    //     mkdir($direcionE, 0777, true);
-                    //     mkdir($direcionR, 0777, true);
-    
-                    //     mkdir($direcionM, 0777, true);
-                    //     mkdir($direcionN, 0777, true);
-    
-                        
-                    // }
-                }
-            }
-        }
-
-        if($formulario == 2){ // Actualizar la carpeta
-            if($_SERVER['REQUEST_METHOD'] == 'POST'){
-
-                if(!$_POST['nombre_carpeta']){
-                    $errores->setError("Añade un nuevo nombre a la carpeta");
-                }
-
-                $resultados = $conexion->selecionarRegistro("tabla_carpetas", "");
-
-                foreach($resultados as $resultado){
-                    if($_POST['nombre_carpeta'] == $resultado['nombre_carpeta']){
-                        $errores->setError("La carpeta ya existe");
-                    }
-                }
-
-                if(!$errores->siExiste()){
-                    $valores = $_POST;
-
-                    $conexion->actualizarRegistro("tabla_carpetas", $valores, $id);
-                    header("Location: index.php");
-                }
-                /*
-                var_dump($_POST);
-                exit;
-
-                $nuevaCarpeta = $_POST['nuevaCarpeta'];
-                $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas");
-                $sentencias->execute();
-                $resultados = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-                if(!$nuevaCarpeta){
-                    $errores->setError("Añade un nuevo nombre a la carpeta");
-                }
-                foreach($resultados as $resultado){
-                    if($nuevaCarpeta == $resultado['nombre_carpeta']){
-                        $errores->setError("La carpeta ya existe");
-                    }
-                }
-                if(!$errores->siExiste()){
-                    $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas WHERE id = :id");
-                    $sentencias->bindParam(":id", $id);
-                    $sentencias->execute();
-                    $rec = $sentencias->fetch(PDO::FETCH_LAZY);
-                    $viejaCarpeta = $rec['nombre_carpeta'];
-                    $direcionCAnt = "../CertificadosDoc/".$viejaCarpeta;
-                    $direcionEAnt = "../EvidenciasDoc/".$viejaCarpeta;
-                    $direcionRAnt = "../ReportesDoc/".$viejaCarpeta;
-                    $direcionMAnt = "../EvidenciasSub/Manifiestos/".$viejaCarpeta;
-                    $direcionNAnt = "../EvidenciasSub/Notas/".$viejaCarpeta;
-                    $direcionC = "../CertificadosDoc/".$nuevaCarpeta;
-                    $direcionE = "../EvidenciasDoc/".$nuevaCarpeta;
-                    $direcionR = "../ReportesDoc/".$nuevaCarpeta;
-                    $direcionM = "../EvidenciasSub/Manifiestos/".$nuevaCarpeta;
-                    $direcionN = "../EvidenciasSub/Notas/".$nuevaCarpeta;
-                    rename($direcionCAnt, $direcionC);
-                    rename($direcionEAnt, $direcionE);
-                    rename($direcionRAnt, $direcionR);
-                    rename($direcionMAnt, $direcionM);
-                    rename($direcionNAnt, $direcionN);
-                    $sentencias = $conexion->prepare("UPDATE tabla_carpetas SET nombre_carpeta = :nombre_carpeta  WHERE id = :id");
-                    $sentencias->bindParam(":id", $id);
-                    $sentencias->bindParam(":nombre_carpeta", $nuevaCarpeta);
-                    $sentencias->execute();
-                    if($sentencias){ 
-                        header("Location: index.php");
-                    }
-                }
-                    */
-            }
-        }
-
-        if($accion == 2){ // Eliminacion de la carpeta
-
-            // var_dump($id);
-            $conexion->borrarRegistro("tabla_carpetas", "", $id);
-            header("Location: index.php");
-            /* Borrar las carpetas */
-            // $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas WHERE id = :id");
-            // $sentencias->bindParam(":id", $id);
-            // $sentencias->execute();
-            // $borrar = $sentencias->fetch(PDO::FETCH_LAZY);
-            // $borrar = $borrar['nombre_carpeta'];
-            // $direcionC = "../CertificadosDoc/".$borrar;
-            // $direcionE = "../EvidenciasDoc/".$borrar;
-            // $direcionR = "../ReportesDoc/".$borrar;
-            // $direcionM = "../EvidenciasSub/Manifiestos/".$borrar;
-            // $direcionN = "../EvidenciasSub/Notas/".$borrar;
-            // rmdir($direcionC);
-            // rmdir($direcionE);
-            // rmdir($direcionR);
-            // rmdir($direcionM);
-            // rmdir($direcionN);
-            // if($sentencias){
-            //     $sentencias = $conexion->prepare("DELETE FROM tabla_carpetas WHERE id = :id");
-            //     $sentencias->bindParam(":id", $id);
-            //     $sentencias->execute();
-            //     header("Location: index.php");
-            // }
-        }
-
-        $consultaCarpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
-        $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-        $regpagina = 10;
-        $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
-        $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
+        
     ?>
     <h1>Gestion carpetas</h1>
     <br>
