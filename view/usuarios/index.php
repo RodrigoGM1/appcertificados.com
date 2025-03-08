@@ -53,22 +53,11 @@
 
                         $conexion->inseratRegistro("tabla_usuarios", $valores);
                         header("Location: index.php");
-                        exit;
-
-                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio)");
-                        $sentencias->bindParam(":usuario", $usuario);
-                        $sentencias->bindParam(":clave", $clave);
-                        $sentencias->bindParam(":idprivilegio", $privilegio);
-                        $sentencias->execute();
-                        if($sentencias){
-                            header("Location: index.php");
-                        }   
                     }
                 }
     
                 if($privilegio == 2){ // Creacion de usuario Normal
-                    echo "user";
-                    var_dump($_POST);
+                    
                     if(!$usuario){
                         $errores->setError("Añade nombre del usuario");
                     }
@@ -79,6 +68,12 @@
                         $errores->setError("Añade una carpeta");
                     }
                     if(!$errores->siExiste()){
+                        $valores = $_POST;
+
+                        var_dump($conexion->inseratRegistro("tabla_usuarios", $valores));
+                        exit;
+                        header("Location: index.php");
+    
                         $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
                         $sentencias->bindParam(":usuario", $usuario);
                         $sentencias->bindParam(":clave", $clave);

@@ -39,7 +39,7 @@ class ConexionBD{
         var_dump($sentencias);
         // echo "<br>";
         // var_dump($array);
-        $sentencias->execute();
+        // $sentencias->execute();
     }
 
     public function actualizarRegistro(string $tabla, array $array, $id){
