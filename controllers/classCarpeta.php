@@ -48,4 +48,8 @@ class Carpeta{
         rmdir($direcionM);
         rmdir($direcionN);
     }
+
+    public function agregarArchivo($archivo, $direcion){
+        move_uploaded_file($archivo, $direcion);
+    }
 }

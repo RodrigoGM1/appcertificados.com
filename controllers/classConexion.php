@@ -36,6 +36,7 @@ class ConexionBD{
         $conexion = self::conexion();
 
         $sentencias = $conexion->prepare("INSERT INTO ".$tabla."(".join(", ", self::conversionKey($array)).") VALUES ('". join("', '", self::conversionValues($array)) ."')");
+        // var_dump($sentencias);
         $sentencias->execute();
     }
 
@@ -48,7 +49,6 @@ class ConexionBD{
         }
 
         $sentencias = $conexion->prepare("UPDATE ".$tabla." SET ".join(", ", $valores)." WHERE id = ".$id."");
-        var_dump($sentencias);
         $sentencias->execute();
     }
 

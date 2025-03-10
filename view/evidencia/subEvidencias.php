@@ -4,82 +4,204 @@
     }
 
     $pagina = "evidencia";
-    include "../../templates/header.php"; 
-    include "../../controllers/bd.php";
+    include "../../templates/header.php";
     include "../../controllers/classError.php";
-
+    include "../../controllers/classConexion.php";
+    include "../../controllers/classCarpeta.php";
 
     $errores = new ClassErrores();
+    $conexion = new ConexionBD();
+    $archivo = new Carpeta(); 
 
-    $carpeta = $_GET['carpeta'];
+    /*
+    if($form == 2){ // Actualizar evidencias
+        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+            $fecha = $_POST['fechaAnterior'];
+            $id = $_GET['id'];
+
+            if($fecha){
+                $sentencias = $conexion->prepare("UPDATE tabla_certificados SET fecha = :fecha  WHERE id = :id");
+                $sentencias->bindParam(":fecha", $fecha);
+                $sentencias->bindParam(":id", $id);
+                $sentencias->execute();
+            }
+
+            if($_FILES['manifiestoAnterior']['name']){ // Manifiesto
+                $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
+                $sentencias->bindParam(":id", $id);
+                $sentencias->execute();
+                $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
+                $manifiesto = $_FILES['manifiestoAnterior']['name'];
+                $direcionM = "../EvidenciasSub/Manifiestos/".$nombreCarpeta."/".$manifiesto;
+                $direcionMAn = "../EvidenciasSub/Manifiestos/".$nombreCarpeta."/".$selecionarEvi['manifiesto'];
+
+                if($selecionarEvi['manifiesto'] == ""){
+                    $sentencias = $conexion->prepare("UPDATE tabla_certificados SET manifiesto = :manifiesto  WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":manifiesto", $manifiesto);
+                    $sentencias->execute();
+                    move_uploaded_file($_FILES['manifiestoAnterior']['tmp_name'], $direcionM);
+                }
+                else{
+                    $sentencias = $conexion->prepare("UPDATE tabla_certificados SET manifiesto = :manifiesto  WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":manifiesto", $manifiesto);
+                    $sentencias->execute();
+
+                    if(file_exists($direcionMAn)){
+                        unlink($direcionMAn);
+                        move_uploaded_file($_FILES['manifiestoAnterior']['tmp_name'], $direcionM);
+                    }
+                }
+            }
+
+            if($_FILES['notaAnterior']['name']){ 
+                $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
+                $sentencias->bindParam(":id", $id);
+                $sentencias->execute();
+                $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
+                $nota = $_FILES['notaAnterior']['name'];
+                $direcionN = "../EvidenciasSub/Notas/".$nombreCarpeta."/".$nota;
+                $direcionNAn = "../EvidenciasSub/Notas/".$nombreCarpeta."/".$selecionarEvi['nota'];
+                
+                if($selecionarEvi['nota'] == ""){
+                    $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nota = :nota  WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":nota", $nota);
+                    $sentencias->execute();
+                    move_uploaded_file($_FILES['notaAnterior']['tmp_name'], $direcionN);
+                }
+                else{
+                    $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nota = :nota  WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":nota", $nota);
+                    $sentencias->execute();
+
+                    if(file_exists($direcionNAn)){
+                        unlink($direcionNAn);
+                        move_uploaded_file($_FILES['notaAnterior']['tmp_name'], $direcionN);
+                    }
+                }
+            }
+
+            if($_FILES['evidenciaAnterior']['name']){ 
+                $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
+                $sentencias->bindParam(":id", $id);
+                $sentencias->execute();
+                $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
+                $evidencia = $_FILES['evidenciaAnterior']['name'];
+                $direcionE = "../EvidenciasDoc/".$nombreCarpeta."/".$evidencia;
+                $direcionEAn = "../EvidenciasDoc/".$nombreCarpeta."/".$selecionarEvi['n_evidencias'];  
+                
+                if($selecionarEvi['n_evidencias'] == ""){
+                    $sentencias = $conexion->prepare("UPDATE tabla_certificados SET n_evidencias = :n_evidencias  WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":n_evidencias", $evidencia);
+                    $sentencias->execute();
+                    move_uploaded_file($_FILES['evidenciaAnterior']['tmp_name'], $direcionE);
+                }
+                else{
+                    $sentencias = $conexion->prepare("UPDATE tabla_certificados SET n_evidencias = :n_evidencias  WHERE id = :id");
+                    $sentencias->bindParam(":id", $id);
+                    $sentencias->bindParam(":n_evidencias", $evidencia);
+                    $sentencias->execute();
+
+                    if(file_exists($direcionEAn)){
+                        unlink($direcionEAn);
+                        move_uploaded_file($_FILES['evidenciaAnterior']['tmp_name'], $direcionE);
+                    }
+                }
+            }
+        }
+
+        if($sentencias){
+            header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+        }
+    }
+
+    if($accion == 2){ // Eliminar
+        $id = $_GET['id'];
+        $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
+        $sentencias->bindParam(":id", $id);
+        $sentencias->execute();
+        $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
+
+        $direcionMAn = "../EvidenciasSub/Manifiestos/".$nombreCarpeta."/".$selecionarEvi['manifiesto'];
+        $direcionNAn = "../EvidenciasSub/Notas/".$nombreCarpeta."/".$selecionarEvi['nota'];
+        $direcionEAn = "../EvidenciasDoc/".$nombreCarpeta."/".$selecionarEvi['n_evidencias'];
+
+        unlink($direcionEAn);
+        unlink($direcionMAn);
+        unlink($direcionNAn);
+        $sentencias = $conexion->prepare("DELETE FROM tabla_certificados WHERE id = :id");
+        $sentencias->bindParam(":id", $id);
+        $sentencias->execute();
+        header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+
+    }
+    */
+?>
+
+<main class="main_inicio">
+
+    <?php
+        $carpeta = $_GET['carpeta'];
         $nombreCarpeta = $_GET['nombreCarpeta'];
         $form = isset($_GET['form']) ? $_GET['form'] : '';
         $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
         $id = isset($_GET['id']) ? $_GET['id'] : '';
-    
+
         if($form == 1){ // Creacion de la evidencia
             $fecha = '';
             $evidencia = '';
             $manifiesto = '';
             $nota = '';
-    
+
             if($_SERVER['REQUEST_METHOD'] == 'POST'){
                 $fecha = $_POST['fecha'];
-    
+
                 if(!$fecha){
                     $errores->setError("Añada la fecha");
                 }
-
                 if(!$errores->siExiste()){
-                    if($_FILES['evidencia']['name'] or $_FILES['manifiesto']['name'] or $_FILES['nota']['name']){
-                        echo "archivos";
+                    if($_FILES['n_evidencias']['name'] or $_FILES['manifiesto']['name'] or $_FILES['nota']['name']){
                         $manifiesto = $_FILES['manifiesto']['name'] ? $_FILES['manifiesto']['name'] : ''; 
                         $nota = $_FILES['nota']['name'] ? $_FILES['nota']['name'] : '';
-                        $evidencia = $_FILES['evidencia']['name'] ? $_FILES['evidencia']['name'] : '';
-    
+                        $evidencia = $_FILES['n_evidencias']['name'] ? $_FILES['n_evidencias']['name'] : '';
+                        $valores = $_POST;
+                        $valores['id_carpeta'] = $carpeta;
                         $direcionM = "../EvidenciasSub/Manifiestos/".$nombreCarpeta."/".$manifiesto;
                         $direcionN = "../EvidenciasSub/Notas/".$nombreCarpeta."/".$nota;
                         $direcionE = "../EvidenciasDoc/".$nombreCarpeta."/".$evidencia;
-    
-    
+                        
                         if($_FILES['manifiesto']['tmp_name']){
-                            move_uploaded_file($_FILES['manifiesto']['tmp_name'], $direcionM);
+                            $archivo->agregarArchivo($_FILES['manifiesto']['tmp_name'], $direcionM);
+                            $valores['manifiesto'] =  $manifiesto;
                         }
                         if($_FILES['nota']['tmp_name']){
-                            move_uploaded_file($_FILES['nota']['tmp_name'], $direcionN);
+                            $archivo->agregarArchivo($_FILES['nota']['tmp_name'], $direcionN);
+                            $valores['nota'] = $nota;
                         }
-                        if($_FILES['evidencia']['tmp_name']){
-                            move_uploaded_file($_FILES['evidencia']['tmp_name'], $direcionE);
+                        if($_FILES['n_evidencias']['tmp_name']){
+                            $archivo->agregarArchivo($_FILES['n_evidencias']['tmp_name'], $direcionE);
+                            $valores['n_evidencias'] = $evidencia;
                         }
-    
-                        $sentencias = $conexion->prepare("INSERT INTO tabla_certificados(id,n_evidencias,fecha,manifiesto,nota,id_carpeta) VALUES (NULL,:n_evidencias,:fecha,:manifiesto,:nota,:id_carpeta)");
-                        $sentencias->bindParam(":fecha", $fecha);
-                        $sentencias->bindParam(":n_evidencias", $evidencia);
-                        $sentencias->bindParam(":manifiesto", $manifiesto);
-                        $sentencias->bindParam(":nota", $nota);
-                        $sentencias->bindParam(":id_carpeta", $carpeta);
-                        $sentencias->execute();
 
-                        if($sentencias){
-                            header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-                        }
-                    }
-                    
+                        var_dump($valores);
+                        $conexion->inseratRegistro("tabla_certificados", $valores);
+                        header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+                    }                 
                     else{
-                        $sentencias = $conexion->prepare("INSERT INTO tabla_certificados(id, fecha, id_carpeta) VALUES (NULL, :fecha, :id_carpeta)");
-                        var_dump($sentencias);
-                        var_dump($fecha);
-                        $sentencias->bindParam(":fecha", $fecha);
-                        $sentencias->bindParam(":id_carpeta", $carpeta);
-                        $sentencias->execute();
-                        if($sentencias){
-                            header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-                        }
+                        $valores = [];
+                        $valores['id_carpeta'] = $carpeta;
+                        $valores['fecha'] = $_POST['fecha'];
+                        $conexion->inseratRegistro("tabla_certificados", $valores);
+                        header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
                     }
                 }
             }
         }
-    
+
         if($form == 2){ // Actualizar evidencias
             if($_SERVER['REQUEST_METHOD'] == 'POST'){
                 $fecha = $_POST['fechaAnterior'];
@@ -184,55 +306,20 @@
                 header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
             }
         }
-    
-        if($accion == 2){ // Eliminar
-            $id = $_GET['id'];
-            $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
-    
-            $direcionMAn = "../EvidenciasSub/Manifiestos/".$nombreCarpeta."/".$selecionarEvi['manifiesto'];
-            $direcionNAn = "../EvidenciasSub/Notas/".$nombreCarpeta."/".$selecionarEvi['nota'];
-            $direcionEAn = "../EvidenciasDoc/".$nombreCarpeta."/".$selecionarEvi['n_evidencias'];
-    
-            unlink($direcionEAn);
-            unlink($direcionMAn);
-            unlink($direcionNAn);
-            $sentencias = $conexion->prepare("DELETE FROM tabla_certificados WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            header("Location:subEvidencias.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-    
-        }
-    
+        
+        $consultaCarpetas = $conexion->selecionarRegistro("tabla_certificados", "");
         $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
         $regpagina = 15;
         $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
-    
-        $sentencias = $conexion->prepare("SELECT SQL_CALC_FOUND_ROWS id,n_evidencias,fecha,manifiesto,nota FROM tabla_certificados WHERE id_carpeta = :id ORDER BY fecha DESC LIMIT $inicio,$regpagina");
-        $sentencias->bindParam(":id", $carpeta);
-        $sentencias->execute();
-        $resultadoEvidencias = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-    
-        $totalregistro = $conexion->query("SELECT FOUND_ROWS() AS total");
-        $totalregistro = $totalregistro->fetch()['total'];
-        $Numeropaginas = ceil($totalregistro / $regpagina);
-?>
+        $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
+    ?>
 
-<main class="main_inicio">
     <h1>Evidencias <?php echo $nombreCarpeta; ?></h1>
     <br>
     
     <?php if($errores->siExiste()){ $errores->imprimirErrores(); } ?>
 
-    <?php 
-        if($accion == 1){ 
-            $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            $evidenciaAnterior = $sentencias->fetch(PDO::FETCH_LAZY);
-    ?>
+    <?php if($accion == 1){ $evidenciaAnterior = $conexion->selecionarRegistro("tabla_carpetas", "id = ". $id); ?>
         <h2>Cambiar evidencia</h2>
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=2&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
             <input type="date" name="fechaAnterior" value="<?php echo $evidenciaAnterior['fecha']; ?>">
@@ -288,7 +375,7 @@
                         <label for="nota" class="manifiesto">Nota    <i class="fa-solid fa-upload"></i></label>
                     </td>
                     <td>
-                        <input id="evidencia" type="file" name="evidencia" class="inputOculto">
+                        <input id="evidencia" type="file" name="n_evidencias" class="inputOculto">
                         <label for="evidencia" class="manifiesto">Evidencia    <i class="fa-solid fa-upload"></i></label>
                     </td>
                     <td class="relleno"><button class="botonCarpetasG">Guardar</button></td>
@@ -358,3 +445,4 @@
 <?php
     include "../../templates/footer.php"; 
 ?>
+<!-- Numero de lineas 360 -->
