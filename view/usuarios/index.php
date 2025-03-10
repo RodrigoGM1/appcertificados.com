@@ -23,8 +23,6 @@
         $usuarios = $conexion->selecionarRegistro("tabla_usuarios", "");
         $tabPrivilegios = $conexion->selecionarRegistro("tabla_privilegios", "");
         $carpetas = $conexion->selecionarRegistro("tabla_carpetas", "");
-        
-
 
         $usuario = '';
         $clave = '';
@@ -68,142 +66,45 @@
                         $errores->setError("Añade una carpeta");
                     }
                     if(!$errores->siExiste()){
-                        $valores = $_POST;
+                        $valoresUsuario = [];
+                        $valoresCarpeta = [];
 
-                        var_dump($conexion->inseratRegistro("tabla_usuarios", $valores));
-                        exit;
+                        $valoresUsuario['usuario'] = $_POST['usuario'];
+                        $valoresUsuario['clave'] = $_POST['clave'];
+                        $valoresUsuario['idprivilegio'] = $_POST['idprivilegio'];
+
+                        $valoresCarpeta['usuario'] = $_POST['usuario'];
+                        $valoresCarpeta['carpeta'] = $_POST['carpeta'];
+                        
+                        var_dump($conexion->inseratRegistro("tabla_usuarios", $valoresUsuario));
+                        var_dump($conexion->inseratRegistro("tabla_usuario_carpeta", $valoresCarpeta));
+                        
                         header("Location: index.php");
-    
-                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
-                        $sentencias->bindParam(":usuario", $usuario);
-                        $sentencias->bindParam(":clave", $clave);
-                        $sentencias->bindParam(":idprivilegio", $privilegio);
-                        $sentencias->bindParam(":usuario_a_carpeta", $usuario);
-                        $sentencias->bindParam(":idcarpeta", $carpeta);
-                        $sentencias->execute();
-                        if($sentencias){
-                            header("Location: index.php");
-                        }
                     }
                 }
-    
             }
         }
 
-        /*
-        $usuario = '';
-        $clave = '';
-        $privilegio = '';
-        $carpeta = '';
-        if($form == 1){ // Creacion de usuario
-            if($_SERVER['REQUEST_METHOD'] == 'POST'){
-                $usuario = $_POST['usuario'];
-                $clave = $_POST['clave'];
-                $privilegio = $_POST['privilegio'];
-                $carpeta = $_POST['carpeta'];
-    
-                if(!$privilegio){
-                    $errores->setError("Añada los privilegios para el usuario");
-                }
-    
-                if($privilegio == 1){ // Creacion de usuario Admin
-                    if(!$usuario){
-                        $errores->setError("Añada un nombre para el usuario");
-                    }
-                    if(!$clave){
-                        $errores->setError("Añada un contraseña para usuario");
-                    }
-                    if(!$errores->siExiste()){
-                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio)");
-                        $sentencias->bindParam(":usuario", $usuario);
-                        $sentencias->bindParam(":clave", $clave);
-                        $sentencias->bindParam(":idprivilegio", $privilegio);
-                        $sentencias->execute();
-                        if($sentencias){
-                            header("Location: index.php");
-                        }   
-                    }
-                }
-    
-                if($privilegio == 2){ // Creacion de usuario Normal
-                    echo "user";
-                    var_dump($_POST);
-                    if(!$usuario){
-                        $errores->setError("Añade nombre del usuario");
-                    }
-                    if(!$clave){
-                        $errores->setError("Añade una contraseña");
-                    }
-                    if(!$carpeta){
-                        $errores->setError("Añade una carpeta");
-                    }
-                    if(!$errores->siExiste()){
-                        $sentencias = $conexion->prepare("INSERT INTO tabla_usuarios(usuario, clave, idprivilegio) VALUES (:usuario, :clave, :idprivilegio); INSERT INTO tabla_usuario_carpeta(usuario_a_carpeta, idcarpeta) VALUES (:usuario_a_carpeta, :idcarpeta)");
-                        $sentencias->bindParam(":usuario", $usuario);
-                        $sentencias->bindParam(":clave", $clave);
-                        $sentencias->bindParam(":idprivilegio", $privilegio);
-                        $sentencias->bindParam(":usuario_a_carpeta", $usuario);
-                        $sentencias->bindParam(":idcarpeta", $carpeta);
-                        $sentencias->execute();
-                        if($sentencias){
-                            header("Location: index.php");
-                        }
-                    }
-                }
-    
-            }
-        }
-    
         if($form == 2){ // Actualizar usuario
             if($_SERVER['REQUEST_METHOD'] == 'POST'){
-                $nuevaClave = $_POST['nuevaClave'];
-                if(!$nuevaClave){
+                $valores = $_POST;
+                $clave = $_POST['clave'];
+                if(!$clave){
                     !$errores->siExiste("Añada un contraseña para usuario");
                 }
                 if(!$errores->siExiste()){
-                    $sentencias = $conexion->prepare("UPDATE tabla_usuarios SET clave = :clave WHERE id = :id");
-                    $sentencias->bindParam(":id", $id);
-                    $sentencias->bindParam(":clave", $nuevaClave);
-                    $sentencias->execute();
-                    if($sentencias){
-                        header("Location: index.php");
-                    }
+                    $conexion->actualizarRegistro("tabla_usuarios", $valores, $id);
+                    header("Location: index.php");
                 }
             }
         }
-    
+
         if($accion == 2){ // Eliminacion usuario
             $id = $_GET['id'];
-            $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            $resultado = $sentencias->fetch(PDO::FETCH_LAZY);
-            $resultado = $resultado['usuario'];
-            $sentencias = $conexion->prepare("DELETE FROM tabla_usuarios WHERE id = :id; DELETE FROM tabla_usuario_carpeta WHERE usuario_a_carpeta = :usuario_a_carpeta");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->bindParam(":usuario_a_carpeta", $resultado);
-            $sentencias->execute();
-            if($sentencias){
-                header("Location: index.php");
-            }
+            //Falta modificaciones
+            var_dump($resultado = $conexion->borrarRegistro("tabla_usuarios", "", $id));
+            header("Location: index.php");
         }
-    
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios");
-        $sentencias->execute();
-        $usuarios = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-        
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_privilegios");
-        $sentencias->execute();
-        $tabPrivilegios = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-    
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE idprivilegio = 1");
-        $sentencias->execute();
-        $administradores = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-    
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_carpetas");
-        $sentencias->execute();
-        $carpetas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-        */
     ?>
 
     <h1>Usuarios</h1>
@@ -228,8 +129,8 @@
                 <td><?php echo $impUsuarios['usuario']; ?></td>
                 <td>Administrador</td>
                 <td>
-                    <a href="?accion=1&id=<?php echo $administrador['id']; ?>"><i class="fa-regular fa-pen-to-square estiloOjo"></i></a>
-                    <a href="?accion=2&id=<?php echo $administrador['id']; ?>"><i class="fa-regular fa-trash-can estiloBasura"></i></a>
+                    <a href="?accion=1&id=<?php echo $impUsuarios['id']; ?>"><i class="fa-regular fa-pen-to-square estiloOjo"></i></a>
+                    <a href="?accion=2&id=<?php echo $impUsuarios['id']; ?>"><i class="fa-regular fa-trash-can estiloBasura"></i></a>
                 </td>
             </tr>
             <?php $i++; } } ?>
@@ -295,17 +196,14 @@
     <br>
     <?php
         if($accion == 1){
-            $sentencias = $conexion->prepare("SELECT * FROM tabla_usuarios WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            $resUsuario = $sentencias->fetch(PDO::FETCH_LAZY); 
+            $resUsuario = $conexion->selecionarRegistro("tabla_usuarios", "id = ".$id);
     ?>
         <div class="border">
             <div>
                 <h2>Datos del usuario:</h2>
-                <form action="?form=2" class="formUsuarios" method="post">
-                    <input class="inputUsuario" type="text" placeholder="Usuario" readonly="readonly" name="nuevoUsuario" value="<?php echo $resUsuario['usuario']; ?>">
-                    <input class="inputUsuario" type="password" placeholder="Contraseña" name="nuevaClave" value="<?php echo $resUsuario['clave']; ?>">
+                <form action="?form=2&id=<?php echo $resUsuario['id']; ?>" class="formUsuarios" method="post">
+                    <input class="inputUsuario" type="text" placeholder="Usuario" readonly="readonly"  value="<?php echo $resUsuario['usuario']; ?>">
+                    <input class="inputUsuario" type="password" placeholder="Contraseña" name="clave" value="<?php echo $resUsuario['clave']; ?>">
                     <button class="botonModal">Guardar</button>
                 </form>
             </div>

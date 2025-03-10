@@ -36,10 +36,7 @@ class ConexionBD{
         $conexion = self::conexion();
 
         $sentencias = $conexion->prepare("INSERT INTO ".$tabla."(".join(", ", self::conversionKey($array)).") VALUES ('". join("', '", self::conversionValues($array)) ."')");
-        var_dump($sentencias);
-        // echo "<br>";
-        // var_dump($array);
-        // $sentencias->execute();
+        $sentencias->execute();
     }
 
     public function actualizarRegistro(string $tabla, array $array, $id){
@@ -51,6 +48,7 @@ class ConexionBD{
         }
 
         $sentencias = $conexion->prepare("UPDATE ".$tabla." SET ".join(", ", $valores)." WHERE id = ".$id."");
+        var_dump($sentencias);
         $sentencias->execute();
     }
 
