@@ -52,4 +52,8 @@ class Carpeta{
     public function agregarArchivo($archivo, $direcion){
         move_uploaded_file($archivo, $direcion);
     }
+
+    public function borrarArchivos($direcion){
+        unlink($direcion);
+    }
 }

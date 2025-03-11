@@ -17,14 +17,14 @@ class ConexionBD{
     }
 
     public function selecionarRegistro(string $tabla, string $condicion) {
-        $sentencias = self::conexion();
-        if($condicion == ""){
-            $sentencias = $sentencias->prepare("SELECT * FROM ". $tabla ."");
+        $conexion = self::conexion();
+        if($condicion == NULL){
+            $sentencias = $conexion->prepare("SELECT * FROM ". $tabla ."");
             $sentencias->execute();
             $registro = $sentencias->fetchAll(PDO::FETCH_ASSOC);
         }
         else{
-            $sentencias = $sentencias->prepare("SELECT * FROM ". $tabla ." WHERE ". $condicion . "");
+            $sentencias = $conexion->prepare("SELECT * FROM ". $tabla ." WHERE ". $condicion . "");
             $sentencias->execute();
             $registro = $sentencias->fetch(PDO::FETCH_LAZY);
         }
@@ -49,6 +49,7 @@ class ConexionBD{
         }
 
         $sentencias = $conexion->prepare("UPDATE ".$tabla." SET ".join(", ", $valores)." WHERE id = ".$id."");
+        // var_dump($sentencias);
         $sentencias->execute();
     }
 
