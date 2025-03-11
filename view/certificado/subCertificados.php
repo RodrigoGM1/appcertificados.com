@@ -5,10 +5,13 @@
 
     $pagina = "certificado";
     include "../../templates/header.php"; 
-    include "../../controllers/bd.php"; 
+    include "../../controllers/classConexion.php";
+    include "../../controllers/classCarpeta.php";
     include "../../controllers/classError.php"; 
 
     $errores = new ClassErrores();
+    $conexion = new ConexionBD();
+    $archivo = new Carpeta();
 
     $form = isset($_GET['form']) ? $_GET['form']: '';
     $accion = isset($_GET['accion']) ? $_GET['accion']: '';
@@ -101,18 +104,11 @@
         }
     }
 
+    $resultadoEvidencias = $conexion->selecionarRegistro("tabla_certificados", "");
     $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
     $regpagina = 15;
     $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
-
-    $sentencias = $conexion->prepare("SELECT SQL_CALC_FOUND_ROWS * FROM tabla_certificados WHERE id_carpeta = :id ORDER BY fecha DESC LIMIT $inicio,$regpagina");
-    $sentencias->bindParam(":id", $carpeta);
-    $sentencias->execute();
-    $resultadoEvidencias = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-
-    $totalregistro = $conexion->query("SELECT FOUND_ROWS() AS total");
-    $totalregistro = $totalregistro->fetch()['total'];
-    $Numeropaginas = ceil($totalregistro / $regpagina);
+    $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
 ?>
 <main class="main_inicio">
     <h1>Certificados <?php echo $nombreCarpeta; ?></h1>
@@ -124,7 +120,7 @@
 
    ?>
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=1&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
-            <input class="evidenciaFecha" type="file" name="evidencias">
+            <input class="evidenciaFecha" type="file" name="nombre_c">
             <button class="botonCarpetasA">Guardar</button>
         </form>
     <?php } elseif($accion == 2){ 
@@ -137,7 +133,7 @@
         
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=2&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
             <label class="labelCertificado"><?php echo $evidenciaAnterior['nombre_c']; ?></label>
-            <input class="evidenciaFecha" type="file" name="evidencias">
+            <input class="evidenciaFecha" type="file" name="nombre_c">
             <button class="botonCarpetasA">Guardar</button>
         </form>
     <?php } ?>
