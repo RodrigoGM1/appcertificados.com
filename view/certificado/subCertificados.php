@@ -18,91 +18,7 @@
     $carpeta = $_GET['carpeta'];
     $nombreCarpeta = $_GET['nombreCarpeta'];
 
-    if($form == 1){ // Crear certifiacado
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $id = $_GET['id'];
-            $evidencia = $_FILES['evidencias']['name'];
-            $direcionE = "../CertificadosDoc/".$nombreCarpeta."/".$evidencia;
-    
-            if(!move_uploaded_file($_FILES['evidencias']['tmp_name'], $direcionE)){
-                $errores->setError("No se pudo subir el archivo");
-            }
-    
-            if(!$errores->siExiste()){
-                $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nombre_c = :nombre_c  WHERE id = :id");
-                $sentencias->bindParam(":id", $id);
-                $sentencias->bindParam(":nombre_c", $evidencia);
-                $sentencias->execute();
-    
-                if($sentencias){
-                    header("Location:subCertificados.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-                }
-            }        
-        }
-    }
 
-    if($form == 2){ // Actualizacion
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $evidencia = $_FILES['evidencias']['name'];
-            $id = $_GET['id'];
-            $direcionE = "../CertificadosDoc/".$nombreCarpeta."/".$evidencia;
-
-            $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
-
-            $direcionEAn = "../CertificadosDoc/".$nombreCarpeta."/".$selecionarEvi['nombre_c'];
-
-            if(file_exists($direcionEAn)){
-                unlink($direcionEAn);
-            if(!move_uploaded_file($_FILES['evidencias']['tmp_name'], $direcionE)){
-                $errores->setError("No se pudo subir el archivo");
-            }
-            }else{
-                $errores->setError("No se pudo borrar el archivo");
-            }
-
-            if(!$errores->siExiste()){
-                $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nombre_c = :nombre_c  WHERE id = :id");
-                $sentencias->bindParam(":id", $id);
-                $sentencias->bindParam(":nombre_c", $evidencia);
-                $sentencias->execute();
-                if($sentencias){
-                    header("Location:subCertificados.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-                }
-            }
-
-        }
-    }
-
-    if($accion == 3){ // Eliminar
-        $id = $_GET['id'];
-
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->execute();
-        $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
-        var_dump($selecionarEvi);
-
-        $direcionEAn = "../CertificadosDoc/".$nombreCarpeta."/".$selecionarEvi['nombre_c'];
-
-        if(file_exists($direcionEAn)){
-            unlink($direcionEAn);
-        }else{
-            $errores->setError("No se pudo borrar el archivo");
-        }
-
-        if(!$errores->siExiste()){
-            $sentencias = $conexion->prepare("UPDATE tabla_certificados SET nombre_c = '' WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-        }
-
-        if($sentencias){
-            header("Location:subCertificados.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-        }
-    }
 
     $resultadoEvidencias = $conexion->selecionarRegistro("tabla_certificados", "");
     $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
@@ -111,13 +27,70 @@
     $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
 ?>
 <main class="main_inicio">
+    <?php
+        if($form == 1){ // Crear certifiacado
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $id = $_GET['id'];
+                $direcionE = "../CertificadosDoc/".$nombreCarpeta."/".$_FILES['nombre_c']['name'];
+
+                if($archivo->agregarArchivo($_FILES['nombre_c']['tmp_name'], $direcionE)){
+                    $errores->setError("No se pudo subir el archivo");
+                }
+        
+                if(!$errores->siExiste()){
+                    $valores['nombre_c'] = $_FILES['nombre_c']['name'];
+                    $conexion->actualizarRegistro("tabla_certificados", $valores, $id);
+                    header("Location:subCertificados.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+                }        
+            }
+        }
+    
+        if($form == 2){ // Actualizacion
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $id = $_GET['id'];
+                $direcionE = "../CertificadosDoc/".$nombreCarpeta."/".$_FILES['nombre_c']['name'];
+                
+                $selecionarEvi = $conexion->selecionarRegistro("tabla_certificados", "id = ". $id);
+                $direcionEAn = "../CertificadosDoc/".$nombreCarpeta."/".$selecionarEvi['nombre_c'];
+    
+                if(file_exists($direcionEAn)){
+                    $archivo->borrarArchivos($direcionEAn);
+                    $archivo->agregarArchivo($_FILES['nombre_c']['tmp_name'], $direcionE);
+                }
+    
+                if(!$errores->siExiste()){
+                    $valores['nombre_c'] = $_FILES['nombre_c']['name'];;
+                    $sentencias = $conexion->actualizarRegistro("tabla_certificados", $valores, $id);
+                    header("Location:subCertificados.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+                }
+    
+            }
+        }
+    
+        if($accion == 3){ // Eliminar
+            $id = $_GET['id'];
+            $selecionarEvi = $conexion->selecionarRegistro("tabla_certificados", "id = ". $id);
+            $direcionEAn = "../CertificadosDoc/".$nombreCarpeta."/".$selecionarEvi['nombre_c'];
+            
+            if(file_exists($direcionEAn)){
+                $archivo->borrarArchivos($direcionEAn);
+            }else{
+                $errores->setError("No se pudo borrar el archivo");
+            }
+
+            if(!$errores->siExiste()){
+                $valores['nombre_c'] = "";
+                $conexion->actualizarRegistro("tabla_certificados", $valores, $id);
+                header("Location:subCertificados.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+            }
+        }
+    ?>
     <h1>Certificados <?php echo $nombreCarpeta; ?></h1>
     <br>
 
     <?php
         if($accion == 1){
             $id = $_GET['id'];
-
    ?>
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=1&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
             <input class="evidenciaFecha" type="file" name="nombre_c">
@@ -125,10 +98,7 @@
         </form>
     <?php } elseif($accion == 2){ 
         $id = $_GET['id'];
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_certificados WHERE id = :id");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->execute();
-        $evidenciaAnterior = $sentencias->fetch(PDO::FETCH_LAZY);
+        $evidenciaAnterior = $conexion->selecionarRegistro("tabla_certificados", "id = ". $id);
     ?>
         
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=2&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
