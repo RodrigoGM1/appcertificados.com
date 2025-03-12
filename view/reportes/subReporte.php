@@ -1,53 +1,15 @@
 <?php
     $pagina = "reporte";
     include "../../templates/header.php";
-    include "../../controllers/bd.php";
-    include "../../controllers/classError.php";
+    include "../../controllers/classConexion.php";
+    include "../../controllers/classCarpeta.php";
+    include "../../controllers/classError.php"; 
 
     $errores = new ClassErrores();
+    $conexion = new ConexionBD();
+    $archivo = new Carpeta();
 
-    $carpeta = $_GET['carpeta'];    
-    $nombreCarpeta = $_GET['nombreCarpeta'];
-    $form = isset($_GET['form']) ? $_GET['form']: '';
-    $accion = isset($_GET['accion']) ? $_GET['accion']: '';
-    $id = isset($_GET['id']) ? $_GET['id']: '';
-
-    if($form == 1){ // Crear reporte
-        $fecha = '';
-        $reporte = '';
-        $cantidad = '';
-        if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $fecha = $_POST['fecha'];
-            $reporte = $_FILES['reporte']['name'];
-            $cantidad = $_POST['cantidad'];
-            $direcionE = "../ReportesDoc/".$nombreCarpeta."/".$reporte;
-            
-            if(!$fecha){
-                $errores->setError("Añada la fecha");
-            }
-            if(!$cantidad){
-                $errores->setError("Añada la cantidad CO2");
-            }
-            if(!$reporte){
-                $errores->setError("Añada el reporte mensual");
-            }
-            if(!move_uploaded_file($_FILES['reporte']['tmp_name'], $direcionE)){
-                $errores->setError("No se pudo subir el archivo");
-            }
-
-            if(!$errores->siExiste()){
-                $sentencias = $conexion->prepare("INSERT INTO tabla_reportes(fecha, reporte, cantidad, id_carpeta) VALUES (:fecha, :reporte, :cantidad, :id_carpeta)");
-                $sentencias->bindParam(":fecha", $fecha);
-                $sentencias->bindParam(":reporte", $reporte);
-                $sentencias->bindParam(":cantidad", $cantidad);
-                $sentencias->bindParam(":id_carpeta", $carpeta);
-                $sentencias->execute();
-                if($sentencias){
-                    header("Location:subReporte.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-                }     
-            }
-        }
-    }
+    /*
 
     if($form == 2){ // actualizar
         $fechaNuevo = '';
@@ -103,56 +65,120 @@
         }
     }
 
-    if($accion == 2){ // Eliminar
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_reportes WHERE id = :id");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->execute();
-        $selecionarEvi = $sentencias->fetch(PDO::FETCH_LAZY);
-        $direcionEAn = "../ReportesDoc/".$nombreCarpeta."/".$selecionarEvi['reporte'];
-
-        if(file_exists($direcionEAn)){
-            unlink($direcionEAn);
-        }else{
-            $errores->setError("No se pudo borrar el archivo");
-        }
-
-        if(!$errores->siExiste()){
-            $sentencias = $conexion->prepare("DELETE FROM tabla_reportes WHERE id = :id");
-            $sentencias->bindParam(":id", $id);
-            $sentencias->execute();
-            header("Location:subReporte.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
-        }
-    }
-
-    $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-    $regpagina = 6;
-    $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
-
-    $sentencias = $conexion->prepare("SELECT SQL_CALC_FOUND_ROWS * FROM tabla_reportes WHERE id_carpeta = :id_carpeta ORDER BY fecha DESC LIMIT $inicio,$regpagina");
-    $sentencias->bindParam(":id_carpeta", $carpeta);
-    $sentencias->execute();
-    $resultado = $sentencias->fetchAll(PDO::FETCH_ASSOC);
-
-    $totalregistro = $conexion->query("SELECT FOUND_ROWS() AS total");
-    $totalregistro = $totalregistro->fetch()['total'];
-    $Numeropaginas = ceil($totalregistro / $regpagina);
+    */
 ?>
 <main class="main_inicio">
+    <?php
+        $carpeta = $_GET['carpeta'];    
+        $nombreCarpeta = $_GET['nombreCarpeta'];
+        $form = isset($_GET['form']) ? $_GET['form']: '';
+        $accion = isset($_GET['accion']) ? $_GET['accion']: '';
+        $id = isset($_GET['id']) ? $_GET['id']: '';
+    
+        if($form == 1){ // Crear reporte
+            $fecha = '';
+            $reporte = '';
+            $cantidad = '';
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $fecha = $_POST['fecha'];
+                $reporte = $_FILES['reporte']['name'];
+                $cantidad = $_POST['cantidad'];
+                $direcionE = "../ReportesDoc/".$nombreCarpeta."/".$_FILES['reporte']['name'];
+                
+                if(!$fecha){
+                    $errores->setError("Añada la fecha");
+                }
+                if(!$cantidad){
+                    $errores->setError("Añada la cantidad CO2");
+                }
+                if(!$reporte){
+                    $errores->setError("Añada el reporte mensual");
+                }
+
+                if(!$errores->siExiste()){
+                    $valores = $_POST;
+                    $valores['reporte'] = $_FILES['reporte']['name'];
+                    $valores['id_carpeta'] = $carpeta;
+                    $archivo->agregarArchivo($_FILES['reporte']['tmp_name'], $direcionE);
+                    $conexion->inseratRegistro("tabla_reportes", $valores);
+
+                    header("Location:subReporte.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");     
+                }
+            }
+        }
+
+        if($form == 2){ // actualizar
+            $fechaNuevo = '';
+            $cantidadNuevo = '';
+            $reporteNuevo = '';
+            if($_SERVER['REQUEST_METHOD'] == 'POST'){
+                $fechaNuevo = $_POST['fecha'];
+                $cantidadNuevo = $_POST['cantidad'];
+                $reporteNuevo = $_FILES['reporte']['name'];
+                $direcionE = "../ReportesDoc/".$nombreCarpeta."/".$reporteNuevo;
+                
+                if(empty($reporteNuevo)){
+                    $valores = $_POST;
+                    $sentencias = $conexion->actualizarRegistro("tabla_reportes", $valores, $id);
+                    header("Location:subReporte.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+                }
+                else{
+                    $selecionarRep = $conexion->selecionarRegistro("tabla_reportes", "id = ". $id);
+                    $direcionEAn = "../ReportesDoc/".$nombreCarpeta."/".$selecionarRep['reporte'];
+
+                    if(file_exists($direcionEAn)){
+                        $archivo->borrarArchivos($direcionEAn);
+                        $archivo->agregarArchivo($_FILES['reporte']['tmp_name'], $direcionE);
+                    }else{
+                        $errores->setError("No se pudo borrar el archivo");
+                    }
+    
+                    if(!$errores->siExiste()){
+                        $valores = $_POST;
+                        $valores['reporte'] = $_FILES['reporte']['name'];
+                        $sentencias = $conexion->actualizarRegistro("tabla_reportes", $valores, $id);
+                        header("Location:subReporte.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+                    }
+    
+                }
+            }
+        }
+
+        if($accion == 2){ // Eliminar
+            $selecionarEvi = $conexion->selecionarRegistro("tabla_reportes", "id = ".$id);
+            $direcionEAn = "../ReportesDoc/".$nombreCarpeta."/".$selecionarEvi['reporte'];
+
+            if(file_exists($direcionEAn)){
+                $archivo->borrarArchivos($direcionEAn);
+            }else{
+                $errores->setError("No se pudo borrar el archivo");
+            }
+    
+            if(!$errores->siExiste()){
+                $conexion->borrarRegistro("tabla_reportes", "", $id);
+                header("Location:subReporte.php?carpeta=$carpeta&nombreCarpeta=$nombreCarpeta");
+            }
+        }
+
+        $resultado = $conexion->selecionarRegistro("tabla_reportes", "");
+
+        $resultadoEvidencias = $conexion->selecionarRegistro("tabla_certificados", "");
+        $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+        $regpagina = 15;
+        $inicio = ($pagina > 1) ? (($pagina * $regpagina) - $regpagina) : 0;
+        $Numeropaginas = $conexion->paginador($pagina, $regpagina, $inicio);
+    ?>
+
     <h1>Reportes <?php echo $nombreCarpeta; ?></h1>
     <br>
 
     <?php if($errores->siExiste()){ $errores->imprimirErrores(); } ?>
 
-    <?php if($accion == 1){
-        $sentencias = $conexion->prepare("SELECT * FROM tabla_reportes WHERE id = :id");
-        $sentencias->bindParam(":id", $id);
-        $sentencias->execute();
-        $reporteAnt = $sentencias->fetch(PDO::FETCH_LAZY);
-    ?>
+    <?php if($accion == 1){ $reporteAnt = $conexion->selecionarRegistro("tabla_reportes", "id = ". $id); ?>
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=2&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
-            <input class="evidenciaFecha" type="date" name="fechaNuevo" value="<?php echo $reporteAnt['fecha']; ?>">
-            <input class="evidenciaArchivos" type="number" step="0.01" name="cantidadNuevo" value="<?php echo $reporteAnt['cantidad']; ?>">
-            <input class="evidenciaArchivos" type="file" name="reporteNuevo">
+            <input class="evidenciaFecha" type="date" name="fecha" value="<?php echo $reporteAnt['fecha']; ?>">
+            <input class="evidenciaArchivos"                                                                              ="number" step="0.01" name="cantidad" value="<?php echo $reporteAnt['cantidad']; ?>">
+            <input class="evidenciaArchivos" type="file" name="reporte">
 
             <button class="botonCarpetasA">Guardar</button>
         </form>
@@ -230,10 +256,7 @@
 ?>
 
 <?php
-    $sentencias = $conexion->prepare("SELECT fecha, cantidad FROM tabla_reportes WHERE id_carpeta = :id_carpeta ORDER BY fecha ASC LIMIT 12");
-    $sentencias->bindParam(":id_carpeta", $carpeta);
-    $sentencias->execute();
-    $graficas = $sentencias->fetchAll(PDO::FETCH_ASSOC);
+    $graficas = $conexion->selecionarRegistro("tabla_reportes", "");
 ?>
 
 <script>    

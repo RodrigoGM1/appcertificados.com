@@ -18,8 +18,6 @@
     $carpeta = $_GET['carpeta'];
     $nombreCarpeta = $_GET['nombreCarpeta'];
 
-
-
     $resultadoEvidencias = $conexion->selecionarRegistro("tabla_certificados", "");
     $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
     $regpagina = 15;
