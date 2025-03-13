@@ -177,7 +177,7 @@
     <?php if($accion == 1){ $reporteAnt = $conexion->selecionarRegistro("tabla_reportes", "id = ". $id); ?>
         <form class="formActualizar" action="?carpeta=<?php echo $carpeta;?>&form=2&nombreCarpeta=<?php echo $nombreCarpeta; ?>&id=<?php echo $id; ?>" method="post" enctype="multipart/form-data">
             <input class="evidenciaFecha" type="date" name="fecha" value="<?php echo $reporteAnt['fecha']; ?>">
-            <input class="evidenciaArchivos"                                                                              ="number" step="0.01" name="cantidad" value="<?php echo $reporteAnt['cantidad']; ?>">
+            <input class="evidenciaArchivos" step="0.01" name="cantidad" value="<?php echo $reporteAnt['cantidad']; ?>">
             <input class="evidenciaArchivos" type="file" name="reporte">
 
             <button class="botonCarpetasA">Guardar</button>

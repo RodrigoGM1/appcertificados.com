@@ -49,7 +49,6 @@ class ConexionBD{
         }
 
         $sentencias = $conexion->prepare("UPDATE ".$tabla." SET ".join(", ", $valores)." WHERE id = ".$id."");
-        // var_dump($sentencias);
         $sentencias->execute();
     }
 
